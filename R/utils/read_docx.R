@@ -107,8 +107,11 @@ paragraph_markdown <- function(p, rels) {
 
     hl <- xml2::xml_find_first(leaf, "ancestor::w:hyperlink[1]", W_NS)
     href <- if (!is.na(hl)) {
-      rid <- xml2::xml_attr(hl, "id", ns = c(r = R_NS_URI))
-      if (is.na(rid) || is.null(rid)) NA_character_ else unname(rels[rid])
+      # The attribute is r:id (relationships namespace, local name "id"); xml2
+      # requires the "prefix:localname" form, not the bare local name, or the
+      # lookup silently returns NA and every hyperlink is dropped.
+      rid <- xml2::xml_attr(hl, "r:id", ns = c(r = R_NS_URI))
+      if (is.na(rid)) NA_character_ else unname(rels[rid])
     } else NA_character_
 
     list(text = text, italic = italic, bold = bold, superscript = superscript,

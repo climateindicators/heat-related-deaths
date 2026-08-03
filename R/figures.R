@@ -55,11 +55,8 @@ girafe_indicator <- function(p, height = 4.2) {
 
 # Map a data frame's label column to INDICATOR_COLOURS and to a legend order,
 # both driven by an explicit key order rather than alphabetising the label
-# text. ggplot's default scale ordering is alphabetical for a character
-# aesthetic, which happens to match EPA's own legend for Figure 1 and does not
-# for Figure 2 (EPA orders by descending magnitude: Age 65+, Non-Hispanic
-# Black, General population). Explicit is used everywhere so the correct order
-# is not an accident.
+# text (ggplot's default for a character aesthetic). Order is baseline series
+# first, matching the colour role each series is assigned in INDICATOR_COLOURS.
 label_colours <- function(d, key_col, label_col, order) {
   lab <- d[[label_col]][match(order, d[[key_col]])]
   setNames(unname(INDICATOR_COLOURS[order]), lab)
@@ -90,7 +87,7 @@ fig_1_plot <- function() {
   # icd_revision splits the line at the classification change; series_key alone
   # would draw straight through 1998/1999.
   d$seg <- paste(d$series_key, d$icd_revision, sep = "/")
-  order <- c("underlying_or_contributing_may_sep", "underlying_all_year")
+  order <- c("underlying_all_year", "underlying_or_contributing_may_sep")
 
   ggplot(d, aes(x = year, y = value, colour = series_label, group = seg)) +
     geom_line_interactive(linewidth = 0.9) +
@@ -102,7 +99,7 @@ fig_1_plot <- function() {
           year, series_label, value, icd_revision
         )
       ),
-      size = 1.4
+      size = 2.2
     ) +
     scale_colour_manual(values = label_colours(d, "series_key", "series_label", order),
                        breaks = label_order(d, "series_key", "series_label", order)) +
@@ -125,7 +122,7 @@ fig_1_table <- function() {
 
 fig_2_plot <- function() {
   d <- read_indicator("heat_deaths_summer_cvd.csv")
-  order <- c("age_65_plus", "nh_black", "general")
+  order <- c("general", "age_65_plus", "nh_black")
   d$population_key <- factor(d$population_key, levels = order)
 
   ggplot(d, aes(x = year, y = value, colour = population_label, group = population_key)) +
@@ -139,7 +136,7 @@ fig_2_plot <- function() {
           sprintf("%d — %s\n%.2f deaths per million", year, population_label, value)
         )
       ),
-      size = 1.3
+      size = 2.2
     ) +
     scale_colour_manual(values = label_colours(d, "population_key", "population_label", order),
                        breaks = label_order(d, "population_key", "population_label", order)) +
@@ -169,11 +166,17 @@ EXAMPLE_PANEL_LABELS <- c(
 fig_example_plot <- function() {
   d <- read_indicator("chicago_1995_heat_wave.csv")
   d$panel <- factor(EXAMPLE_PANEL_LABELS[d$unit], levels = unname(EXAMPLE_PANEL_LABELS))
-  order <- c("deaths_1995", "deaths_avg_1990_2000", "high_temp_f")
+  order <- c("deaths_avg_1990_2000", "deaths_1995", "high_temp_f")
   d$measure_key <- factor(d$measure_key, levels = order)
 
-  # EPA highlights the severe stretch of the heat wave.
-  highlight <- data.frame(xmin = as.Date("1995-07-11"), xmax = as.Date("1995-07-27"))
+  # Shade the acute event: the contiguous run of days where 1995 deaths ran at
+  # least 50 above the 1990-2000 average for that date. Derived from the data,
+  # not copied from any published date range; a threshold this high isolates
+  # the single peak stretch (July 14-18) rather than the scattered ordinary
+  # summer variation above a lower bar.
+  wide <- tidyr::pivot_wider(d, id_cols = date, names_from = measure_key, values_from = value)
+  excess_days <- wide$date[(wide$deaths_1995 - wide$deaths_avg_1990_2000) >= 50]
+  highlight <- data.frame(xmin = min(excess_days), xmax = max(excess_days))
 
   # group is explicit because the tooltip string below is unique per row; left
   # implicit, ggplot infers grouping from every discrete aesthetic in a layer,
