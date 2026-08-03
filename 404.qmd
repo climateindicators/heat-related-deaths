@@ -1,0 +1,8 @@
+---
+title: "Page not found"
+---
+
+That page does not exist here.
+
+- [Heat-Related Deaths](index.qmd), the indicator
+- [Data & Downloads](data.qmd)

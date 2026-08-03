@@ -1,0 +1,119 @@
+---
+title: "Heat-Related Deaths"
+subtitle: "This indicator presents data on deaths classified as \"heat-related\" in the United States."
+---
+
+```{r}
+#| label: setup
+#| include: false
+source(here::here("_common.R"))
+source(here::here("R/figures.R"))
+meta <- read_meta()
+```
+
+```{r}
+#| label: caption-block
+#| include: false
+# Renders a figure's caption strip from data/meta.yml: title, data source, and
+# web-update date, all copied verbatim from the CSV EPA published. Nothing here
+# is hand-typed, so it cannot drift from the source file.
+caption_block <- function(file) {
+  m <- meta_for(file, meta)
+  knitr::asis_output(sprintf(
+    "**%s**\n\nData source: %s <br> Web update: %s\n",
+    m$figure_title, m$data_source, m$web_update
+  ))
+}
+```
+
+## Figure 1
+
+```{r}
+#| label: fig-1-caption
+#| echo: false
+#| output: asis
+caption_block("heat_deaths_annual.csv")
+```
+
+```{r}
+#| label: fig-1
+#| echo: false
+fig_1()
+```
+
+<details><summary>Show the data behind this figure</summary>
+
+```{r}
+#| label: fig-1-table
+#| echo: false
+knitr::kable(fig_1_table(), digits = 3)
+```
+
+Download: [tidy CSV](data/heat_deaths_annual.csv) · [original EPA file](data-raw/heat-deaths_fig-1.csv)
+
+</details>
+
+## Figure 2
+
+```{r}
+#| label: fig-2-caption
+#| echo: false
+#| output: asis
+caption_block("heat_deaths_summer_cvd.csv")
+```
+
+```{r}
+#| label: fig-2
+#| echo: false
+fig_2()
+```
+
+<details><summary>Show the data behind this figure</summary>
+
+```{r}
+#| label: fig-2-table
+#| echo: false
+knitr::kable(fig_2_table(), digits = 3)
+```
+
+Download: [tidy CSV](data/heat_deaths_summer_cvd.csv) · [original EPA file](data-raw/heat-deaths_fig-2.csv)
+
+</details>
+
+## Example: The 1995 Chicago Heat Wave
+
+```{r}
+#| label: fig-example-caption
+#| echo: false
+#| output: asis
+caption_block("chicago_1995_heat_wave.csv")
+```
+
+```{r}
+#| label: fig-example
+#| echo: false
+fig_example()
+```
+
+<details><summary>Show the data behind this figure</summary>
+
+```{r}
+#| label: fig-example-table
+#| echo: false
+knitr::kable(utils::head(fig_example_table(), 10), digits = 1,
+            caption = "First 10 of 92 days.")
+```
+
+Download: [tidy CSV](data/chicago_1995_heat_wave.csv) · [original EPA file](data-raw/heat-deaths_example.csv)
+
+</details>
+
+::: {.callout-note appearance="simple" icon=false}
+## 🚧 Coming soon
+
+The rest of this page (Key Points, Background, About the Indicator, Indicator
+Notes, Data Sources, and References) is EPA's own published text and is being
+added next, extracted directly from EPA's source document rather than retyped.
+See [Data & Downloads](data.qmd) for what's already here: tidy data, a full
+dictionary, and both departures from EPA's published charts.
+:::
