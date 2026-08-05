@@ -1,0 +1,125 @@
+---
+title: "Data & Downloads"
+subtitle: "Tidy, long-format versions of every figure on this site, with a full data dictionary."
+toc-depth: 3
+---
+
+```{r}
+#| label: setup
+#| include: false
+source(here::here("_common.R"))
+meta <- read_meta()
+```
+
+EPA publishes this indicator's data as three spreadsheet-shaped CSV files, each
+wrapped in a five-line metadata preamble and encoded in Windows-1252. They are
+built for opening in Excel, not for analysis.
+
+The files below carry the same numbers in long format, one observation per row,
+UTF-8, with a machine-readable key for every series. Values are copied across as
+text, so the source file's precision survives exactly. The original EPA files are
+kept alongside them, unmodified, so any transformation can be checked.
+
+```{r}
+#| label: downloads
+#| echo: false
+rows <- lapply(meta$datasets, function(d) {
+  data.frame(
+    Figure   = d$figure,
+    Tidy     = sprintf("[`%s`](data/%s)", d$file, d$file),
+    Rows     = d$rows,
+    Original = sprintf("[`%s`](data-raw/%s)", d$source_file, d$source_file),
+    Updated  = d$web_update,
+    check.names = FALSE
+  )
+})
+knitr::kable(do.call(rbind, rows), row.names = FALSE, align = "llrll")
+```
+
+Also in the repository: [`data/meta.yml`](data/meta.yml), the machine-readable
+version of the dictionary below, and
+[`data-raw/PROVENANCE.md`](data-raw/PROVENANCE.md), which records where each
+source file came from and its checksum.
+
+## Two things worth knowing before you use these
+
+### Suppressed values are not zeros
+
+CDC withholds a rate when the underlying death count falls below its disclosure
+threshold, writing `Suppressed` in place of a number. This happens twice in
+Figure 2, both in the non-Hispanic Black series.
+
+In these files such an observation keeps its row, carries an empty `value`, and
+sets `flag` to `suppressed`. It means "too few deaths to publish", which is
+different from zero and different from missing. Charts on this site draw a gap
+there. EPA's own published Figure 2 plots those two points at zero, which reads
+as though nobody died.
+
+### The 1998/1999 break is real
+
+Causes of death were classified under ICD-9 through 1998 and ICD-10 from 1999.
+Rates either side of that change are not directly comparable, which is why EPA
+draws Figure 1's underlying-cause line with a gap.
+
+EPA records this only as a visual break and a footnote. Here it is a column,
+`icd_revision`, so the discontinuity is visible to anything reading the file and
+a chart cannot accidentally interpolate across it.
+
+## Data dictionary
+
+```{r}
+#| label: dictionary
+#| echo: false
+#| output: asis
+for (d in meta$datasets) {
+  cat("\n### ", d$figure, ": `", d$file, "`\n\n", sep = "")
+  cat("> ", d$figure_title, "\n\n", sep = "")
+
+  facts <- data.frame(
+    Field = c("Rows", "Unit", "Data source", "Web update", "Built from", "Source encoding"),
+    Value = c(as.character(d$rows), d$unit, d$data_source, d$web_update,
+              paste0("`", d$source_file, "`"), d$source_encoding),
+    check.names = FALSE
+  )
+  print(knitr::kable(facts, row.names = FALSE))
+  cat("\n\n")
+
+  cols <- do.call(rbind, lapply(d$columns, function(cc) {
+    data.frame(Column = paste0("`", cc$name, "`"), Type = cc$type,
+               Description = cc$description, check.names = FALSE)
+  }))
+  print(knitr::kable(cols, row.names = FALSE))
+  cat("\n\n")
+
+  if (!is.null(d$series) && length(d$series)) {
+    cat("**Series**\n\n")
+    ser <- do.call(rbind, lapply(d$series, function(s) {
+      data.frame(
+        Key      = paste0("`", s$key, "`"),
+        Label    = s$label,
+        Coverage = if (is.null(s$coverage)) "" else s$coverage,
+        `Source column` = paste0("`", s$source_header, "`"),
+        check.names = FALSE
+      )
+    }))
+    print(knitr::kable(ser, row.names = FALSE))
+    cat("\n\n")
+    for (s in d$series) {
+      if (!is.null(s$note)) cat("- `", s$key, "`: ", s$note, "\n", sep = "")
+    }
+    cat("\n")
+  }
+  if (!is.null(d$note)) cat("\n", d$note, "\n\n", sep = "")
+}
+```
+
+## Rights
+
+```{r}
+#| label: rights
+#| echo: false
+#| output: asis
+cat(meta$indicator$rights, "\n\n")
+cat("Original indicator page: <", meta$indicator$source_page, ">\n\n", sep = "")
+cat("Technical documentation: <", meta$indicator$technical_documentation, ">\n", sep = "")
+```

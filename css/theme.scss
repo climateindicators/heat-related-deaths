@@ -1,0 +1,400 @@
+@import "https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400;1,600&display=swap";
+
+/*-- scss:defaults --*/
+
+// ---------------------------------------------------------------------------
+// Palette, lifted from climate.us. Every tinted rule below derives from these,
+// so re-theming the site means editing this block and nothing else.
+// ---------------------------------------------------------------------------
+$accent:       #2882e6;  // link / brand blue
+$accent-light: #5aa3f0;  // lightened for legibility on the dark footer bar
+$accent-dark:  #1b66bd;  // pressed states
+$ink:          #1e1e1e;  // near-black — navbar and footer
+$ink-soft:     #333333;  // header bar on climate.us proper
+$body-text:    #464646;
+$panel:        #f9f6f4;  // warm off-white for cards, sidebar, callouts
+$rule:         #dcdcd7;  // warm border
+$muted:        #757575;
+
+// Bootstrap picks up $link-color from $primary, so setting this alone recolors
+// links, active states, and focus rings site-wide.
+$primary:    $accent;
+$body-bg:    #fff;
+$body-color: $body-text;
+
+// Font families — climate.us sets Source Serif 4 on headings, then overrides
+// h1–h3 back to Source Sans 3, so the whole site is effectively one sans face.
+$font-family-sans-serif: "Source Sans 3", "Source Sans Pro", Helvetica, Arial, sans-serif;
+$font-family-base:       $font-family-sans-serif;
+$headings-font-family:   $font-family-sans-serif;
+$navbar-font-family:     $font-family-sans-serif;
+$headings-font-weight:   700;
+
+// Page layout
+$grid-sidebar-width: 300px !default;
+$grid-margin-width: 300px !default;
+
+// Navbar height is driven entirely by this vertical padding (the bar has
+// min-height: 0), so it is the single knob for how tall the header sits.
+$navbar-padding-y: 1.15rem;
+
+/*-- scss:rules --*/
+
+/* Typography */
+body {
+  font-family: $font-family-base;
+}
+
+h1, .h1, h2, .h2, h3, .h3, h4, .h4 {
+  font-family: $headings-font-family;
+  font-weight: 700;
+  color: $ink;
+}
+
+p {
+  margin-bottom: 8px;
+}
+
+// climate.us underlines in-content links. Scoped to prose only so the navbar,
+// sidebar, TOC, listing cards, and anchor glyphs keep their own treatment.
+main.content a:not(.anchorjs-link):not(.quarto-title-meta-heading):not(.btn) {
+  text-decoration: underline;
+}
+
+// ...but listing cards are whole-tile links, not prose — the underline reads as
+// broken text there. Re-flatten everything inside a listing.
+.quarto-listing a,
+.quarto-listing a *,
+a.quarto-grid-link,
+a.quarto-grid-link * {
+  text-decoration: none !important;
+}
+
+/* Navbar — the black header bar. `background: dark` in _quarto.yml gets Quarto
+   to emit the light-on-dark variant; this pins the exact shade. */
+.navbar {
+  background-color: $ink !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+nav.navbar {
+  padding-top: $navbar-padding-y !important;
+  padding-bottom: $navbar-padding-y !important;
+  min-height: 0;
+}
+
+// Shared hover/active "block" effect for left-side nav items and right-side
+// tools. Quarto renders `tools:` entries as `.quarto-navbar-tools > a`, which
+// bypasses the `.nav-link` selectors — so they must be listed explicitly.
+.navbar-nav .nav-link,
+.quarto-navbar-tools > a,
+.quarto-navbar-tools > .quarto-navbar-tool {
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background-color: $ink-soft;
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  &:active {
+    background-color: $accent-dark;
+  }
+}
+
+// Current section: a thin, square-ended blue rule under the label, with no
+// background fill. Drawn as a pseudo-element rather than an inset box-shadow
+// or border-bottom — both of those inherit the link's 6px border-radius and
+// bow upward at the ends.
+.navbar-nav .nav-link {
+  position: relative;
+
+  &.active {
+    background-color: transparent;
+    color: #ffffff;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0.55rem;   // matches the link's horizontal padding so the rule
+      right: 0.55rem;  // tracks the label, not the wider hover block
+      bottom: 0;
+      height: 2px;
+      background-color: $accent;
+    }
+  }
+
+  // Keep the hover wash on the current item, but let the rule sit on top.
+  &.active:hover {
+    background-color: $ink-soft;
+  }
+}
+
+// The site title is repeated as the first navbar item, so the Bootstrap brand
+// is redundant on desktop. Keep it for the collapsed mobile navbar, where the
+// nav items are hidden behind the toggle.
+@media (min-width: 992px) {
+  .navbar-brand-container,
+  .navbar .navbar-brand { display: none !important; }
+}
+
+.navbar-nav .nav-link {
+  padding: 0.2rem 0.55rem !important;
+}
+
+.quarto-navbar-tools > a,
+.quarto-navbar-tools > .quarto-navbar-tool {
+  padding: 0.2rem 0.45rem !important;
+  margin: 0 0.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.quarto-navbar-tools {
+  display: flex !important;
+  align-items: center;
+}
+
+.navbar-nav {
+  @media (min-width: 768px) {
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+    .nav-item { flex-shrink: 1; }
+
+    // Spacing + dividers between left-nav items (skip right-side .ms-auto group)
+    &:not(.ms-auto) {
+      gap: 1rem;
+
+      .nav-item + .nav-item {
+        position: relative;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: -0.5rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 1px;
+          height: 1rem;
+          background-color: rgba(255, 255, 255, 0.28);
+          pointer-events: none;
+        }
+      }
+    }
+  }
+}
+
+/* Sidebar */
+.sidebar-item-section > .sidebar-item-container > .sidebar-item-text {
+  font-weight: 700;
+}
+
+.sidebar-item-container .active {
+  font-weight: 700 !important;
+  color: $accent !important;
+}
+
+// Warm off-white panel, matching climate.us's .usa-sidenav-list. Needs the id
+// to outrank Quarto's own `#quarto-sidebar` background rule.
+#quarto-sidebar.sidebar-navigation {
+  background-color: $panel;
+  border-right: 1px solid $rule;
+}
+
+/* Footer */
+.nav-footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 2rem;
+  min-height: unset !important;
+  padding: 0 !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  z-index: 1000;
+  background-color: $ink !important;
+}
+
+footer.footer .nav-footer {
+  padding: 0 !important;
+}
+
+.nav-footer-left,
+.nav-footer-center,
+.nav-footer-right {
+  flex: 1 1 0px !important;
+  min-height: unset !important;
+  margin: 0 !important;
+  order: unset !important;
+  white-space: nowrap;
+}
+
+.nav-footer-center a {
+  color: #fff;
+  text-decoration: underline;
+  &:hover { color: $accent-light; }
+}
+
+/* Layout */
+main.content {
+  padding-bottom: 3em;
+}
+
+.sidebar {
+  padding-bottom: 3em;
+}
+
+/* Home page navigation pills — the whole tile is one link to its page. Warm
+   panel surface with the accent blue on hover, mirroring the listing cards.
+   A CSS grid makes pills in the same row stretch to equal height. */
+.home-pills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+  // Single column, compact, left-aligned. grid-auto-rows: 1fr stretches every
+  // row to the tallest, so all single-column pills share one height.
+  .home-pills { grid-template-columns: 1fr; grid-auto-rows: 1fr; gap: 0.75rem; }
+
+  .home-pill {
+    padding: 0.9rem 1.1rem;
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .home-pill-label { font-size: 1.1rem; margin-bottom: 0.2rem; }
+}
+
+.home-pill {
+  display: flex;
+  flex-direction: column;
+  padding: 1.15rem 1.35rem;
+  border: 1px solid $rule;
+  border-radius: 4px;
+  background: $panel;
+  text-decoration: none !important;
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+
+  &:hover {
+    border-color: $accent;
+    color: inherit;
+    box-shadow: 0 0 0 1px $accent, 0 4px 14px rgba(40, 130, 230, 0.16);
+  }
+  &:active {
+    border-color: $accent-dark;
+    box-shadow: 0 0 0 1px $accent-dark;
+    transform: scale(0.995);
+  }
+}
+
+.home-pill-label {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: $accent;
+  margin-bottom: 0.35rem;
+
+  i { margin-right: 0.5rem; }
+}
+
+.home-pill-desc {
+  color: $body-text;
+  line-height: 1.5;
+}
+
+/* ---- Listing cards: Indicators grid (.quarto-grid-item) + any post list
+   (.quarto-post). Squared-off borders and a flat accent outline on hover,
+   matching climate.us's card treatment rather than a soft glow. */
+.quarto-grid-item.card,
+.quarto-post {
+  border: 1px solid $rule;
+  border-radius: 4px;
+  background: $panel;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+
+  &:hover {
+    border-color: $accent !important;
+    box-shadow: 0 0 0 1px $accent, 0 4px 14px rgba(40, 130, 230, 0.16);
+  }
+  &:active {
+    border-color: $accent-dark !important;
+    box-shadow: 0 0 0 1px $accent-dark;
+    transform: scale(0.995);
+  }
+}
+
+// Clip grid card images to the rounded corners (box-shadow is painted outside
+// the border box, so overflow:hidden does not clip the hover outline).
+.quarto-grid-item.card { overflow: hidden; }
+
+// List items: turn the default flex row into a padded card and make the whole
+// card follow the item's title link.
+.quarto-post {
+  position: relative;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+
+  .listing-title a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .listing-categories { margin-top: 0.4rem; }
+
+  // Keep category badges clickable above the whole-card title overlay.
+  .quarto-category,
+  .listing-category {
+    position: relative;
+    z-index: 2;
+  }
+
+  .thumbnail { align-self: center; }
+  .thumbnail img { border-radius: 3px; overflow: hidden; }
+}
+
+// Category badges: accent fill on hover (listings + title-block tags).
+.quarto-category,
+.listing-category {
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background-color: $accent !important;
+    color: #fff !important;
+    border-color: $accent !important;
+  }
+}
+
+/* Tables — climate.us uses the warm grey for header rows. */
+table thead th {
+  background: $rule;
+}
+
+/* Images */
+.image-with-border {
+  border: 1px solid $rule;
+  width: 100%;
+  display: block;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+/* Media queries */
+@media (max-width: 767.98px) {
+  .nav-footer-center,
+  .nav-footer-left,
+  .nav-footer-right {
+    margin-top: -1em;
+    margin-bottom: 0em;
+  }
+}

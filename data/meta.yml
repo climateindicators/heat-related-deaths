@@ -1,0 +1,163 @@
+indicator:
+  name: Heat-Related Deaths
+  slug: heat-related-deaths
+  publisher: U.S. Environmental Protection Agency
+  source_page: https://19january2025snapshot.epa.gov/climate-indicators/climate-change-indicators-heat-related-deaths
+  technical_documentation: https://19january2025snapshot.epa.gov/system/files/documents/2024-06/heat-deaths_documentation.pdf
+  rights: Public domain, work of the U.S. Government (17 U.S.C. 105)
+datasets:
+- file: heat_deaths_annual.csv
+  figure: Figure 1
+  figure_title: Figure 1. Deaths Classified as "Heat-Related" in the United States,
+    1979-2022
+  source_file: heat-deaths_fig-1.csv
+  source_sha256: 727556e60b70f1cf47bdd22af938c6ccaac85f0cfb4d89ed10f9024cbeab6f67
+  source_encoding: windows-1252
+  data_source: CDC, 2024
+  web_update: June 2024
+  unit: death rate (per million people)
+  rows: 67
+  columns:
+  - name: year
+    type: integer
+    description: Calendar year
+  - name: series_key
+    type: string
+    description: Machine-readable series identifier
+  - name: series_label
+    type: string
+    description: Display label, as used in EPA's published chart legend
+  - name: icd_revision
+    type: string
+    description: 'ICD revision in force for that year: ICD-9 through 1998, ICD-10
+      from 1999. Added by this build; not a column in EPA''s file.'
+  - name: measure
+    type: string
+    description: What is measured
+  - name: unit
+    type: string
+    description: Unit of `value`
+  - name: value
+    type: number
+    description: Death rate, verbatim from the source file. Empty when `flag` is set.
+  - name: flag
+    type: string
+    description: Empty for an ordinary observation. `suppressed` means the source
+      withheld the value because the underlying count fell below CDC's disclosure
+      threshold. A suppressed value is not zero and not missing at random, and is
+      drawn as a gap rather than plotted.
+  series:
+  - key: underlying_all_year
+    label: Underlying cause of death (all year)
+    source_header: Underlying cause of death (all year)
+    coverage: 1979–2022
+    note: Deaths for which excessive natural heat was the underlying cause. Values
+      before and after the ICD-9 to ICD-10 change are not directly comparable, which
+      is why EPA draws this line with a break.
+  - key: underlying_or_contributing_may_sep
+    label: Underlying and contributing causes of death (May-Sept)
+    source_header: Underlying and contributing causes of death (May-Sept)
+    coverage: 1999–2021
+    note: Deaths for which heat was the underlying or a contributing cause, May to
+      September only. Blank in the source file outside the coverage range above; those
+      year/series combinations are omitted from this file rather than written as empty
+      values, because the series does not exist for those years.
+- file: heat_deaths_summer_cvd.csv
+  figure: Figure 2
+  figure_title: Figure 2. Summer Deaths Due to Heat and Cardiovascular Disease in
+    the United States, 1999–2022
+  source_file: heat-deaths_fig-2.csv
+  source_sha256: fd16a4f7f54ba965390dd97d7678e500bccae6acd53135158f0e2f5f2cbd13eb
+  source_encoding: windows-1252
+  data_source: CDC, 2024
+  web_update: June 2024
+  unit: death rate (per million people)
+  rows: 72
+  columns:
+  - name: year
+    type: integer
+    description: Calendar year
+  - name: population_key
+    type: string
+    description: Machine-readable population group identifier
+  - name: population_label
+    type: string
+    description: Display label, as used in EPA's published chart legend
+  - name: measure
+    type: string
+    description: What is measured
+  - name: unit
+    type: string
+    description: Unit of `value`
+  - name: value
+    type: number
+    description: Death rate, verbatim from the source file. Empty when `flag` is set.
+  - name: flag
+    type: string
+    description: Empty for an ordinary observation. `suppressed` means the source
+      withheld the value because the underlying count fell below CDC's disclosure
+      threshold. A suppressed value is not zero and not missing at random, and is
+      drawn as a gap rather than plotted.
+  series:
+  - key: age_65_plus
+    label: Age 65+
+    source_header: Crude summer death rate per million, age 65+ population
+    coverage: 1999–2022
+  - key: nh_black
+    label: Non-Hispanic Black people
+    source_header: Crude summer death rate per million, non-Hispanic black population
+    coverage: 1999–2022
+  - key: general
+    label: General population
+    source_header: Crude summer death rate per million, general population
+    coverage: 1999–2022
+  note: Restricted to summer (May to September) deaths with cardiovascular disease
+    as the underlying cause and heat as a contributing cause. The source file lists
+    columns as general, 65+, non-Hispanic Black; this build keys every series by header
+    string, never by position.
+- file: chicago_1995_heat_wave.csv
+  figure: Example figure
+  figure_title: 'Example: Examining Heat-Related Deaths During the 1995 Chicago Heat
+    Wave'
+  source_file: heat-deaths_example.csv
+  source_sha256: 543fe8bdd1e2796952b8185650138e1f3936cfd2332c8f8ed817e89c7d1fc580
+  source_encoding: windows-1252
+  data_source: CDC, 2012; NOAA, 2012
+  web_update: May 2014
+  unit: deaths; °F
+  rows: 276
+  columns:
+  - name: date
+    type: date
+    description: Calendar date, ISO 8601
+  - name: measure_key
+    type: string
+    description: Machine-readable measure identifier
+  - name: measure_label
+    type: string
+    description: Display label
+  - name: unit
+    type: string
+    description: Unit of `value`; this file mixes deaths and degrees Fahrenheit
+  - name: value
+    type: number
+    description: Value, verbatim from the source file. Empty when `flag` is set.
+  - name: flag
+    type: string
+    description: Empty for an ordinary observation; a disclosure marker otherwise.
+  series:
+  - key: deaths_1995
+    label: Daily deaths, 1995
+    source_header: Daily deaths, 1995
+    unit: deaths
+  - key: deaths_avg_1990_2000
+    label: Average daily deaths, 1990-2000
+    source_header: Average daily deaths, 1990-2000
+    unit: deaths
+  - key: high_temp_f
+    label: Daily high temperature, 1995
+    source_header: Daily high temperature, 1995 (°F)
+    unit: degrees Fahrenheit
+  note: Chicago Standard Metropolitan Statistical Area, 1 June to 31 August 1995.
+    Source columns Month/Day/Year are combined into a single ISO date. Unlike the
+    other two files this one mixes units, so `unit` varies by row.
