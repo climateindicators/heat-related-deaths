@@ -25,10 +25,9 @@ is checked against the originals by `tests/test-data.R`.
 
 ## This rebuild
 
-Code, site design, and the derived data schema are licensed CC-BY-SA.
+Code and the derived data schema are licensed CC-BY-SA.
 
 This is an independent project. It is **not** affiliated with, endorsed by, or
 approved by the U.S. Environmental Protection Agency or the Centers for Disease
-Control and Prevention. Where this site departs from EPA's published
-presentation, those departures are documented in `README.md` and on the
-Data & Downloads page.
+Control and Prevention. Where this project departs from EPA's published
+presentation, those departures are documented in `README.md`.
