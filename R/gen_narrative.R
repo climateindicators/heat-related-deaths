@@ -1,55 +1,58 @@
-# ONE-SHOT generator, not a build step. Extracts EPA's prose from the archived
-# source Word document and writes it to narrative_generated.md for manual
-# assembly into index.qmd.
+# Extract EPA's published prose for the Heat-Related Deaths indicator and
+# write it to narrative.qmd.
 #
-#   "C:\Program Files\R\R-4.5.3\bin\Rscript.exe" R/gen_narrative.R
+#   Rscript R/gen_narrative.R
 #
-# Requires the archive at the path below (not part of this repo, see
-# data-raw/PROVENANCE.md). Once index.qmd is edited and signed off, the docx
-# is out of the loop: index.qmd is the source of truth from then on, and
-# rerunning this script does not overwrite it. This script exists so the
-# extraction is reproducible and auditable, not so it runs on every build.
+# Source is data-raw/heat-deaths_text_07-08-24.docx (vendored, scrubbed of
+# reviewer-identifying metadata; see data-raw/PROVENANCE.md and
+# R/scrub_docx.R). data-raw/heat-deaths_TD_06-02-24 CLEAN.docx is also
+# vendored for provenance but not read here: unlike cold-related-deaths, this
+# indicator has no supplementary figure whose title/caption lives only in the
+# technical documentation.
 #
 # One correction is applied after extraction, not before, and is called out
-# below: two URLs in the Data Sources paragraph differ between this archived
-# docx (dated 2024-07-08) and the actually published page (verified live,
-# January 2025 snapshot). The rest of the docx's text was cross-checked
-# paragraph by paragraph against the live page and matched exactly, so this
-# is treated as a post-docx web-only edit, not an extraction error.
+# below: two URLs in the Data Sources paragraph differ between this docx
+# (dated 2024-07-08) and the actually published page (verified live, January
+# 2025 snapshot). The rest of the docx's text was cross-checked paragraph by
+# paragraph against the live page and matched exactly, so this is treated as a
+# post-docx web-only edit, not an extraction error.
 
-source(here::here("R/utils/read_docx.R"))
+root <- here::here()
+source(file.path(root, "R", "utils", "read_docx.R"))
+source(file.path(root, "R", "utils", "write_stable.R"))
 
-ARCHIVE_DOCX <- paste0(
-  "C:/Users/alyko/Desktop/archive/",
-  "Word Files - Indicator Text and TD  (for published indicator updates as of 7-23-2026)/",
-  "Heat-related deaths/heat-deaths_text_07-08-24.docx"
-)
+raw_dir  <- file.path(root, "data-raw")
+TEXT_DOCX <- file.path(raw_dir, "heat-deaths_text_07-08-24.docx")
+OUT_QMD   <- file.path(root, "narrative.qmd")
 
-if (!file.exists(ARCHIVE_DOCX)) {
-  stop(
-    "Archive not found at:\n  ", ARCHIVE_DOCX,
-    "\nThis script is a one-shot generator; see data-raw/PROVENANCE.md.",
-    call. = FALSE
-  )
+if (!file.exists(TEXT_DOCX)) {
+  stop("Source document not found: ", TEXT_DOCX, call. = FALSE)
 }
 
-df <- read_docx_paragraphs(ARCHIVE_DOCX)
+df  <- read_docx_paragraphs(TEXT_DOCX)
+sec <- docx_sections(df)
 
 get <- function(rng) paste(df$text_md[rng], collapse = "\n\n")
 
-# Verified against the live published page (indices confirmed by heading match
-# in the docx and by cross-checking every paragraph but the two URLs below).
-background          <- get(4:6)
-about_the_indicator  <- get(8:10)
-key_points           <- df$text_md[12:18]
-indicator_notes      <- get(32:35)
-data_sources         <- get(37)
-references_raw       <- df$text_md[39:57]
+title    <- df$text_plain[1]
+subtitle <- df$text_plain[2]
 
-# Correction: the archived docx (2024-07-08) names two CDC URLs that the
-# published page (verified live, epa.gov January 2025 snapshot) has since
-# updated. Every other word in this paragraph matched the live page exactly,
-# so this is a targeted fix, not a re-extraction.
+# Key Points is a bulleted list; the section's raw paragraph range also
+# contains the Figure 1/Figure 2 title/caption/source blocks that Word placed
+# after the bullets and before "Indicator Notes", so bullets are selected by
+# style within that range rather than by taking the whole range verbatim.
+kp_idx     <- sec[["Key Points"]]
+key_points <- df$text_md[kp_idx][df$style[kp_idx] == "Bullet2" & !df$empty[kp_idx]]
+
+background          <- get(sec[["Background"]])
+about_the_indicator <- get(sec[["About the Indicator"]])
+indicator_notes     <- get(sec[["Indicator Notes"]])
+data_sources        <- get(sec[["Data Sources"]])
+
+# Correction: the docx (2024-07-08) names two CDC URLs that the published page
+# (verified live, epa.gov January 2025 snapshot) has since updated. Every
+# other word in this paragraph matched the live page exactly, so this is a
+# targeted fix, not a re-extraction.
 data_sources <- sub(
   "www.cdc.gov/environmental-health-tracking/about/index.html",
   "www.cdc.gov/nceh/tracking", data_sources, fixed = TRUE
@@ -59,10 +62,13 @@ data_sources <- sub(
   data_sources, fixed = TRUE
 )
 
-# References: strip the leading "N. " (already asserted 1:19 in order below),
-# emit as raw HTML <ol> with id="ref-N" anchors so body superscripts can link
-# to them. The words are untouched; only the markup changes.
-ref_num <- as.integer(sub("^(\\d{1,2})\\..*$", "\\1", references_raw))
+# References: this document cites sources with typed superscript numbers, not
+# real Word endnotes (contrast cold-related-deaths, which has
+# w:endnoteReference markers). Numbers are already 1:19 in document order.
+references_idx <- sec[["References"]]
+references_idx <- references_idx[!df$empty[references_idx]]
+references_raw <- df$text_md[references_idx]
+ref_num  <- as.integer(sub("^(\\d{1,2})\\..*$", "\\1", references_raw))
 stopifnot("reference numbers are not 1:19 in order" = identical(ref_num, 1:19))
 ref_text <- sub("^\\d{1,2}\\.\\s*", "", references_raw)
 references_html <- paste0(
@@ -91,10 +97,13 @@ indicator_notes      <- sup_to_links(indicator_notes)
 data_sources         <- sup_to_links(data_sources)
 
 out <- c(
-  "<!-- Generated by R/gen_narrative.R from the archived source docx.",
-  "     This is a one-shot output for hand-assembly into index.qmd, not",
-  "     itself rendered. See R/gen_narrative.R for the URL correction",
-  "     applied to Data Sources. -->",
+  "---",
+  paste0('title: "', title, '"'),
+  paste0('subtitle: "', subtitle, '"'),
+  "---",
+  "",
+  "<!-- Generated by R/gen_narrative.R from data-raw/heat-deaths_text_07-08-24.docx.",
+  "     Do not edit by hand: rerunning the generator overwrites this file. -->",
   "",
   "## Key Points", "",
   paste0("- ", key_points, collapse = "\n\n"), "",
@@ -110,5 +119,8 @@ out <- c(
   references_html, ""
 )
 
-writeLines(out, here::here("narrative_generated.md"), useBytes = TRUE)
-cat("Wrote narrative_generated.md,", length(out), "lines.\n")
+write_lines_stable(out, OUT_QMD)
+assert_clean_output(OUT_QMD)
+
+cat("Wrote", basename(OUT_QMD), "-", length(out), "lines,",
+    length(ref_num), "references.\n")

@@ -26,6 +26,14 @@ write_yaml_stable <- function(x, path) {
   invisible(path)
 }
 
+#' Write character lines through a binary connection, LF-terminated.
+write_lines_stable <- function(x, path) {
+  con <- file(path, open = "wb")
+  on.exit(close(con), add = TRUE)
+  writeChar(paste0(paste(x, collapse = "\n"), "\n"), con, eos = NULL)
+  invisible(path)
+}
+
 file_sha256 <- function(path) {
   digest::digest(path, algo = "sha256", file = TRUE)
 }
