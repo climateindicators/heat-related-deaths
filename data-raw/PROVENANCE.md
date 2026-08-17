@@ -37,7 +37,9 @@ EPA actually published. They are not used by the site.
 `heat-deaths_text_07-08-24.docx` and writes `narrative.qmd`. Both this file and
 `heat-deaths_TD_06-02-24 CLEAN.docx` (the technical documentation, currently
 linked but not extracted from, see `indicator.technical_documentation` in
-`data/meta.yml`) are vendored here, scrubbed of reviewer-identifying metadata:
+`data/meta.yml`) were obtained from EPA via a Freedom of Information Act
+(FOIA) request and are vendored here, scrubbed of reviewer-identifying
+metadata:
 
 | File | sha256 (original) | sha256 (vendored, scrubbed) |
 |---|---|---|
