@@ -103,7 +103,12 @@ write_xml(core, core_path, options = character(0))
 
 old_wd <- setwd(tmp)
 on.exit(setwd(old_wd), add = TRUE)
-all_files <- list.files(".", recursive = TRUE, all.files = FALSE)
+# all.files = TRUE is load-bearing. The default excludes dot-prefixed basenames,
+# and "_rels/.rels" is one: it is the OPC package-relationship part, the entry
+# point naming the main document. Omit it and the zip is not a valid Word
+# document, even though R/utils/read_docx.R still parses it fine because it
+# pulls word/document.xml straight out of the archive.
+all_files <- list.files(".", recursive = TRUE, all.files = TRUE, no.. = TRUE)
 if (file.exists(out_path)) file.remove(out_path)
 zip::zip(out_path, files = all_files)
 setwd(old_wd)
