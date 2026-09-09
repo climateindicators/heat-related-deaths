@@ -3,9 +3,8 @@
 #   Rscript tests/test-data.R
 #
 # The checks below are shape-independent: they hold whatever the reshape in
-# R/build_data.R turns each figure into. Value snapshots, which pin the actual
-# numbers so a data update fails loudly instead of passing silently, are the
-# TODO at the bottom.
+# R/build_data.R turns each figure into. Value snapshots, at the bottom, pin
+# the actual numbers so a data update fails loudly instead of passing silently.
 
 setwd(here::here())
 source("R/utils/write_stable.R")
@@ -57,12 +56,48 @@ for (f in list.files("data", pattern = "[.](csv|yml)$", full.names = TRUE)) {
 }
 
 cat("\nValue snapshots\n")
-# TODO value snapshots: pin the actual numbers for each output file, so a
-# legitimate data update fails here and says exactly what changed. For each
-# dataset check at least: row count, the first and last row in source order,
-# and the minimum and maximum of each value column. Compare as strings where
-# the source precision matters. See the source CSV in data-raw/ for the values.
-check("value snapshots have been written", FALSE)
+
+annual <- rd("heat_deaths_annual.csv")
+check("heat_deaths_annual.csv: 67 rows", nrow(annual) == 67L)
+check("heat_deaths_annual.csv: first row is 1979 underlying (ICD-9)",
+      identical(annual$year[1], "1979") &&
+      identical(annual$series_key[1], "underlying_all_year") &&
+      identical(annual$value[1], "0.24038954"))
+check("heat_deaths_annual.csv: last row is 2022 underlying (ICD-10)",
+      identical(annual$year[nrow(annual)], "2022") &&
+      identical(annual$series_key[nrow(annual)], "underlying_all_year") &&
+      identical(annual$value[nrow(annual)], "2.93140257"))
+check("heat_deaths_annual.csv: value min/max",
+      identical(annual$value[which.min(as.numeric(annual$value))], "0.24038954") &&
+      identical(annual$value[which.max(as.numeric(annual$value))], "4.820819989"))
+
+cvd <- rd("heat_deaths_summer_cvd.csv")
+check("heat_deaths_summer_cvd.csv: 72 rows", nrow(cvd) == 72L)
+check("heat_deaths_summer_cvd.csv: first row is 1999 age_65_plus",
+      identical(cvd$year[1], "1999") &&
+      identical(cvd$population_key[1], "age_65_plus") &&
+      identical(cvd$value[1], "5.977382332"))
+check("heat_deaths_summer_cvd.csv: last row is 2022 general",
+      identical(cvd$year[nrow(cvd)], "2022") &&
+      identical(cvd$population_key[nrow(cvd)], "general") &&
+      identical(cvd$value[nrow(cvd)], "0.741101775"))
+check("heat_deaths_summer_cvd.csv: value min/max",
+      identical(cvd$value[which.min(as.numeric(cvd$value))], "0.078550491") &&
+      identical(cvd$value[which.max(as.numeric(cvd$value))], "5.977382332"))
+
+chicago <- rd("chicago_1995_heat_wave.csv")
+check("chicago_1995_heat_wave.csv: 276 rows", nrow(chicago) == 276L)
+check("chicago_1995_heat_wave.csv: first row is 1995-06-01 deaths_1995",
+      identical(chicago$date[1], "1995-06-01") &&
+      identical(chicago$measure_key[1], "deaths_1995") &&
+      identical(chicago$value[1], "164"))
+check("chicago_1995_heat_wave.csv: last row is 1995-08-31 high_temp_f",
+      identical(chicago$date[nrow(chicago)], "1995-08-31") &&
+      identical(chicago$measure_key[nrow(chicago)], "high_temp_f") &&
+      identical(chicago$value[nrow(chicago)], "87.08"))
+check("chicago_1995_heat_wave.csv: value min/max",
+      identical(chicago$value[which.min(as.numeric(chicago$value))], "57.92") &&
+      identical(chicago$value[which.max(as.numeric(chicago$value))], "499"))
 
 cat("\n")
 if (length(failures)) {
